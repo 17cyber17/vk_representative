@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VK Representative</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <h1>Лента VK</h1>
+        <p>Отображаются данные из локальной БД (синхронизация через VK API).</p>
+      </header>
+
+      <section id="feed" class="feed"></section>
+
+      <div class="controls">
+        <button id="load-more">Загрузить ещё</button>
+      </div>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
