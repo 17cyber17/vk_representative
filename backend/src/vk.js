@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { VK_TOKEN, VK_API_VERSION } = require("./config");
+const { VK_SERVICE_KEY, VK_API_VERSION } = require("./config");
 
 const API_BASE = "https://api.vk.com/method";
 
@@ -7,7 +7,7 @@ async function vkRequest(method, params) {
   const response = await axios.get(`${API_BASE}/${method}`, {
     params: {
       ...params,
-      access_token: VK_TOKEN,
+      access_token: VK_SERVICE_KEY,
       v: VK_API_VERSION
     }
   });
