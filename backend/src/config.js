@@ -4,7 +4,7 @@ const DATA_DIR = process.env.DATA_DIR || "/data";
 
 module.exports = {
   PORT: Number(process.env.PORT || 3000),
-  VK_TOKEN: process.env.VK_TOKEN || "",
+  VK_SERVICE_KEY: process.env.VK_SERVICE_KEY || "",
   VK_API_VERSION: process.env.VK_API_VERSION || "5.199",
   OWNER_ID: process.env.OWNER_ID || "",
   SYNC_LIMIT: Number(process.env.SYNC_LIMIT || 200),
