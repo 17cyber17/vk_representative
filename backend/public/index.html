@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
@@ -12,6 +12,24 @@
         <h1>Лента VK</h1>
         <p>Отображаются данные из локальной БД (синхронизация через VK API).</p>
       </header>
+
+      <section class="sync-panel" aria-label="Панель синхронизации">
+        <div class="sync-field">
+          <label for="sync-limit">Лимит</label>
+          <input id="sync-limit" type="number" min="1" value="200" />
+        </div>
+        <div class="sync-field">
+          <label for="sync-offset">Смещение</label>
+          <input id="sync-offset" type="number" min="0" value="0" />
+        </div>
+        <div class="sync-field">
+          <label for="sync-key">API ключ</label>
+          <input id="sync-key" type="password" placeholder="x-api-key" />
+        </div>
+        <button id="sync-button">Синхронизировать</button>
+        <button id="clear-button" class="ghost">Очистить</button>
+        <span id="sync-status" class="sync-status" role="status"></span>
+      </section>
 
       <section id="feed" class="feed"></section>
 

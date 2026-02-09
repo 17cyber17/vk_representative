@@ -65,19 +65,22 @@ async function downloadImage(url, filename) {
   return filePath;
 }
 
-async function syncPosts(db, logger = console) {
+async function syncPosts(db, logger = console, options = {}) {
   if (!OWNER_ID) {
     throw new Error("OWNER_ID is required");
   }
 
-  let offset = 0;
+  const parsedLimit = Number(options.limit);
+  const parsedOffset = Number(options.offset);
+  const syncLimit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.floor(parsedLimit) : SYNC_LIMIT;
+  let offset = Number.isFinite(parsedOffset) && parsedOffset >= 0 ? Math.floor(parsedOffset) : 0;
   const batchSize = 100;
   let fetched = 0;
   let created = 0;
   let updated = 0;
 
-  while (fetched < SYNC_LIMIT) {
-    const count = Math.min(batchSize, SYNC_LIMIT - fetched);
+  while (fetched < syncLimit) {
+    const count = Math.min(batchSize, syncLimit - fetched);
     const response = await fetchWallPosts({
       ownerId: OWNER_ID,
       count,
@@ -152,7 +155,7 @@ async function syncPosts(db, logger = console) {
       }
 
       fetched += 1;
-      if (fetched >= SYNC_LIMIT) {
+      if (fetched >= syncLimit) {
         break;
       }
     }

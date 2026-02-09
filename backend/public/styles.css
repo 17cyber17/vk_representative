@@ -19,6 +19,43 @@ body {
   margin-bottom: 24px;
 }
 
+.sync-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(30, 41, 59, 0.08);
+  margin-bottom: 20px;
+}
+
+.sync-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: #475569;
+}
+
+.sync-field input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5f5;
+  font-size: 14px;
+}
+
+.sync-status {
+  grid-column: 1 / -1;
+  font-size: 14px;
+  color: #0f766e;
+}
+
+.sync-status.is-error {
+  color: #b91c1c;
+}
+
 .feed {
   display: grid;
   gap: 16px;
@@ -97,4 +134,10 @@ button {
 button:disabled {
   background: #94a3b8;
   cursor: not-allowed;
+}
+
+button.ghost {
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5f5;
 }

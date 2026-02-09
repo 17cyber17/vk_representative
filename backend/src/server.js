@@ -72,8 +72,26 @@ app.post("/admin/sync", async (req, res) => {
   }
 
   try {
-    const result = await syncPosts(db, console);
+    const limit = req.body && req.body.limit !== undefined ? req.body.limit : undefined;
+    const offset = req.body && req.body.offset !== undefined ? req.body.offset : undefined;
+    const result = await syncPosts(db, console, { limit, offset });
     res.json({ status: "ok", result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/admin/clear", async (req, res) => {
+  const apiKey = req.headers["x-api-key"];
+  if (!apiKey || apiKey !== ADMIN_API_KEY) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  try {
+    await db.run("DELETE FROM post_images");
+    await db.run("DELETE FROM posts");
+    await db.run("DELETE FROM sync_state");
+    res.json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
