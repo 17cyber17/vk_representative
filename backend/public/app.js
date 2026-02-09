@@ -63,7 +63,6 @@ function renderPost(post) {
   text.textContent = post.text || "";
 
   card.appendChild(title);
-  card.appendChild(text);
 
   if (post.images && post.images.length) {
     const gallery = document.createElement("div");
@@ -78,6 +77,34 @@ function renderPost(post) {
 
     card.appendChild(gallery);
   }
+
+  if (post.audios && post.audios.length) {
+    const audioList = document.createElement("div");
+    audioList.className = "audio-list";
+
+    post.audios.forEach((audio, index) => {
+      const item = document.createElement("div");
+      item.className = "audio-item";
+
+      const link = document.createElement("a");
+      link.className = "audio-link";
+      link.href = audio.url;
+      link.download = "";
+      const artist = audio.artist || "";
+      const title = audio.title || "";
+      const label = artist && title
+        ? `${artist} - ${title}`
+        : artist || title || `Аудио ${index + 1}`;
+      link.textContent = label;
+
+      item.appendChild(link);
+      audioList.appendChild(item);
+    });
+
+    card.appendChild(audioList);
+  }
+
+  card.appendChild(text);
 
   feed.appendChild(card);
 }

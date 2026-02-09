@@ -36,6 +36,17 @@ async function initDb() {
   `);
 
   await db.exec(`
+    CREATE TABLE IF NOT EXISTS post_audio (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL,
+      url TEXT NOT NULL,
+      title TEXT,
+      artist TEXT,
+      FOREIGN KEY(post_id) REFERENCES posts(post_id) ON DELETE CASCADE
+    );
+  `);
+
+  await db.exec(`
     CREATE TABLE IF NOT EXISTS sync_state (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       last_run_at TEXT,
@@ -45,6 +56,7 @@ async function initDb() {
   `);
 
   await ensurePostsColumns(db);
+  await ensurePostAudioColumns(db);
 
   return db;
 }
@@ -55,6 +67,15 @@ async function ensurePostsColumns(db) {
 
   if (!columnNames.has("repost_source_name")) {
     await db.exec("ALTER TABLE posts ADD COLUMN repost_source_name TEXT");
+  }
+}
+
+async function ensurePostAudioColumns(db) {
+  const columns = await db.all("PRAGMA table_info(post_audio)");
+  const columnNames = new Set(columns.map((column) => column.name));
+
+  if (!columnNames.has("artist")) {
+    await db.exec("ALTER TABLE post_audio ADD COLUMN artist TEXT");
   }
 }
 

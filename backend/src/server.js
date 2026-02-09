@@ -38,11 +38,18 @@ app.get("/api/posts", async (req, res) => {
     const postIds = posts.map((post) => post.post_id);
 
     let images = [];
+    let audios = [];
     if (postIds.length) {
       const placeholders = postIds.map(() => "?").join(",");
       images = await db.all(
         `SELECT id, post_id, url, width, height
          FROM post_images
+         WHERE post_id IN (${placeholders})`,
+        ...postIds
+      );
+      audios = await db.all(
+        `SELECT id, post_id, url, title, artist
+         FROM post_audio
          WHERE post_id IN (${placeholders})`,
         ...postIds
       );
@@ -54,9 +61,16 @@ app.get("/api/posts", async (req, res) => {
       return acc;
     }, {});
 
+    const audiosByPost = audios.reduce((acc, audio) => {
+      acc[audio.post_id] = acc[audio.post_id] || [];
+      acc[audio.post_id].push(audio);
+      return acc;
+    }, {});
+
     const payload = posts.map((post) => ({
       ...post,
-      images: imagesByPost[post.post_id] || []
+      images: imagesByPost[post.post_id] || [],
+      audios: audiosByPost[post.post_id] || []
     }));
 
     res.json({ posts: payload, limit, offset });

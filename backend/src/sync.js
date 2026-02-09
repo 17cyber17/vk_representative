@@ -39,6 +39,17 @@ function extractAttachments(post) {
   return copyHistory.flatMap((historyPost) => historyPost.attachments || []);
 }
 
+function extractAudio(attachments) {
+  return attachments
+    .filter((attachment) => attachment && attachment.type === "audio" && attachment.audio)
+    .map((attachment) => ({
+      url: attachment.audio.url || null,
+      artist: attachment.audio.artist || null,
+      title: attachment.audio.title || attachment.audio.text || null
+    }))
+    .filter((audio) => audio.url);
+}
+
 function getRepostSourceName(post, groupsById) {
   const copyHistory = post.copy_history || [];
   if (copyHistory.length === 0) return null;
@@ -139,11 +150,13 @@ async function syncPosts(db, logger = console, options = {}) {
       );
 
       await db.run("DELETE FROM post_images WHERE post_id = ?", postId);
+      await db.run("DELETE FROM post_audio WHERE post_id = ?", postId);
 
       const attachments = extractAttachments(post);
       const photos = attachments
         .map(pickLargestPhoto)
         .filter(Boolean);
+      const audios = extractAudio(attachments);
 
       for (const [index, photo] of photos.entries()) {
         const url = photo.url;
@@ -158,6 +171,17 @@ async function syncPosts(db, logger = console, options = {}) {
           `${PUBLIC_UPLOADS_URL}/${filename}`,
           photo.width || null,
           photo.height || null
+        );
+      }
+
+      for (const audio of audios) {
+        await db.run(
+          `INSERT INTO post_audio (post_id, url, title, artist)
+           VALUES (?, ?, ?, ?)` ,
+          postId,
+          audio.url,
+          audio.title,
+          audio.artist
         );
       }
 
