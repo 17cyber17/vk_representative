@@ -23,6 +23,23 @@ function renderPost(post) {
   const title = document.createElement("h2");
   title.textContent = formatDate(post.date_iso);
 
+  if (post.repost_source_name) {
+    const repost = document.createElement("div");
+    repost.className = "repost";
+
+    const label = document.createElement("span");
+    label.className = "repost-label";
+    label.textContent = "Репост из";
+
+    const source = document.createElement("span");
+    source.className = "repost-source";
+    source.textContent = post.repost_source_name;
+
+    repost.appendChild(label);
+    repost.appendChild(source);
+    card.appendChild(repost);
+  }
+
   const text = document.createElement("p");
   text.textContent = post.text || "(нет текста)";
 

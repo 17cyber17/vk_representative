@@ -29,6 +29,27 @@ function pickLargestPhoto(attachment) {
   }, null);
 }
 
+function extractAttachments(post) {
+  const directAttachments = post.attachments || [];
+  if (directAttachments.length > 0) {
+    return directAttachments;
+  }
+
+  const copyHistory = post.copy_history || [];
+  return copyHistory.flatMap((historyPost) => historyPost.attachments || []);
+}
+
+function getRepostSourceName(post, groupsById) {
+  const copyHistory = post.copy_history || [];
+  if (copyHistory.length === 0) return null;
+
+  const sourceOwnerId = copyHistory[0].owner_id;
+  if (!sourceOwnerId || sourceOwnerId >= 0) return null;
+
+  const group = groupsById.get(Math.abs(sourceOwnerId));
+  return group ? group.name : null;
+}
+
 async function downloadImage(url, filename) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
   const filePath = path.join(UPLOADS_DIR, filename);
@@ -63,6 +84,7 @@ async function syncPosts(db, logger = console) {
       offset
     });
 
+    const groupsById = new Map((response.groups || []).map((group) => [group.id, group]));
     const items = response.items || [];
     if (items.length === 0) {
       break;
@@ -72,33 +94,43 @@ async function syncPosts(db, logger = console) {
       const postId = post.id;
       const dateIso = toIso(post.date);
       const text = post.text || null;
+      const repostSourceName = getRepostSourceName(post, groupsById);
       const nowIso = new Date().toISOString();
 
-      const existing = await db.get("SELECT post_id, text, date_iso FROM posts WHERE post_id = ?", postId);
+      const existing = await db.get(
+        "SELECT post_id, text, date_iso, repost_source_name FROM posts WHERE post_id = ?",
+        postId
+      );
 
       if (!existing) {
         created += 1;
-      } else if (existing.text !== text || existing.date_iso !== dateIso) {
+      } else if (
+        existing.text !== text ||
+        existing.date_iso !== dateIso ||
+        existing.repost_source_name !== repostSourceName
+      ) {
         updated += 1;
       }
 
       await db.run(
-        `INSERT INTO posts (post_id, date_iso, text, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?)
+        `INSERT INTO posts (post_id, date_iso, text, repost_source_name, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT(post_id) DO UPDATE SET
            date_iso = excluded.date_iso,
            text = excluded.text,
+           repost_source_name = excluded.repost_source_name,
            updated_at = excluded.updated_at`,
         postId,
         dateIso,
         text,
+        repostSourceName,
         nowIso,
         nowIso
       );
 
       await db.run("DELETE FROM post_images WHERE post_id = ?", postId);
 
-      const attachments = post.attachments || [];
+      const attachments = extractAttachments(post);
       const photos = attachments
         .map(pickLargestPhoto)
         .filter(Boolean);

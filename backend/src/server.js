@@ -27,7 +27,7 @@ app.get("/api/posts", async (req, res) => {
 
   try {
     const posts = await db.all(
-      `SELECT post_id, date_iso, text, created_at, updated_at
+      `SELECT post_id, date_iso, text, repost_source_name, created_at, updated_at
        FROM posts
        ORDER BY date_iso DESC
        LIMIT ? OFFSET ?`,

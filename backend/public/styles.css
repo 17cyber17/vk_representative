@@ -37,6 +37,29 @@ body {
   color: #5b6472;
 }
 
+.repost {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.repost-label {
+  color: #64748b;
+}
+
+.repost-source {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 600;
+}
+
 .card p {
   margin: 0;
   white-space: pre-wrap;

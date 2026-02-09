@@ -18,6 +18,7 @@ async function initDb() {
       post_id INTEGER PRIMARY KEY,
       date_iso TEXT NOT NULL,
       text TEXT,
+      repost_source_name TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -43,7 +44,18 @@ async function initDb() {
     );
   `);
 
+  await ensurePostsColumns(db);
+
   return db;
+}
+
+async function ensurePostsColumns(db) {
+  const columns = await db.all("PRAGMA table_info(posts)");
+  const columnNames = new Set(columns.map((column) => column.name));
+
+  if (!columnNames.has("repost_source_name")) {
+    await db.exec("ALTER TABLE posts ADD COLUMN repost_source_name TEXT");
+  }
 }
 
 module.exports = {
