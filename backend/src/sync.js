@@ -50,6 +50,13 @@ function getRepostSourceName(post, groupsById) {
   return group ? group.name : null;
 }
 
+function getPostText(post) {
+  if (post.text) return post.text;
+  const copyHistory = post.copy_history || [];
+  if (copyHistory.length === 0) return null;
+  return copyHistory[0].text || null;
+}
+
 async function downloadImage(url, filename) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
   const filePath = path.join(UPLOADS_DIR, filename);
@@ -96,7 +103,7 @@ async function syncPosts(db, logger = console, options = {}) {
     for (const post of items) {
       const postId = post.id;
       const dateIso = toIso(post.date);
-      const text = post.text || null;
+      const text = getPostText(post);
       const repostSourceName = getRepostSourceName(post, groupsById);
       const nowIso = new Date().toISOString();
 
