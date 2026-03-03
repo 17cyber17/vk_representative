@@ -50,28 +50,39 @@ function extractAudio(attachments) {
     .filter((audio) => audio.url);
 }
 
-function getOwnerNameById(ownerId, groupsById, profilesById) {
+function getOwnerSourceById(ownerId, groupsById, profilesById) {
   if (!ownerId) return null;
 
   if (ownerId < 0) {
-    const group = groupsById.get(Math.abs(ownerId));
-    return group ? group.name : null;
+    const groupId = Math.abs(ownerId);
+    const group = groupsById.get(groupId);
+    if (!group) return null;
+    return {
+      name: group.name || null,
+      url: `https://vk.com/club${groupId}`,
+      avatarUrl: group.photo_50 || group.photo_100 || group.photo_200 || null
+    };
   }
 
   const profile = profilesById.get(ownerId);
   if (!profile) return null;
-  return [profile.first_name, profile.last_name].filter(Boolean).join(" ") || null;
+  const name = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || null;
+  return {
+    name,
+    url: `https://vk.com/id${ownerId}`,
+    avatarUrl: profile.photo_50 || profile.photo_100 || profile.photo_200 || null
+  };
 }
 
-function getPostSourceName(post, groupsById, profilesById) {
+function getPostSource(post, groupsById, profilesById) {
   const copyHistory = post.copy_history || [];
   if (copyHistory.length > 0) {
     const repostOwnerId = copyHistory[0].owner_id;
-    return getOwnerNameById(repostOwnerId, groupsById, profilesById);
+    return getOwnerSourceById(repostOwnerId, groupsById, profilesById);
   }
 
   if (post.from_id && post.owner_id && post.from_id !== post.owner_id) {
-    return getOwnerNameById(post.from_id, groupsById, profilesById);
+    return getOwnerSourceById(post.from_id, groupsById, profilesById);
   }
 
   return null;
@@ -132,11 +143,14 @@ async function syncPosts(db, logger = console, options = {}) {
       const postId = post.id;
       const dateIso = toIso(post.date);
       const text = getPostText(post);
-      const sourceName = getPostSourceName(post, groupsById, profilesById);
+      const source = getPostSource(post, groupsById, profilesById);
+      const sourceName = source ? source.name : null;
+      const sourceUrl = source ? source.url : null;
+      const sourceAvatarUrl = source ? source.avatarUrl : null;
       const nowIso = new Date().toISOString();
 
       const existing = await db.get(
-        "SELECT post_id, text, date_iso, source_name FROM posts WHERE post_id = ?",
+        "SELECT post_id, text, date_iso, source_name, source_url, source_avatar_url FROM posts WHERE post_id = ?",
         postId
       );
 
@@ -145,23 +159,29 @@ async function syncPosts(db, logger = console, options = {}) {
       } else if (
         existing.text !== text ||
         existing.date_iso !== dateIso ||
-        existing.source_name !== sourceName
+        existing.source_name !== sourceName ||
+        existing.source_url !== sourceUrl ||
+        existing.source_avatar_url !== sourceAvatarUrl
       ) {
         updated += 1;
       }
 
       await db.run(
-        `INSERT INTO posts (post_id, date_iso, text, source_name, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?)
+        `INSERT INTO posts (post_id, date_iso, text, source_name, source_url, source_avatar_url, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(post_id) DO UPDATE SET
            date_iso = excluded.date_iso,
            text = excluded.text,
            source_name = excluded.source_name,
+           source_url = excluded.source_url,
+           source_avatar_url = excluded.source_avatar_url,
            updated_at = excluded.updated_at`,
         postId,
         dateIso,
         text,
         sourceName,
+        sourceUrl,
+        sourceAvatarUrl,
         nowIso,
         nowIso
       );

@@ -19,6 +19,8 @@ async function initDb() {
       date_iso TEXT NOT NULL,
       text TEXT,
       source_name TEXT,
+      source_url TEXT,
+      source_avatar_url TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -67,6 +69,14 @@ async function ensurePostsColumns(db) {
 
   if (!columnNames.has("source_name")) {
     await db.exec("ALTER TABLE posts ADD COLUMN source_name TEXT");
+  }
+
+  if (!columnNames.has("source_url")) {
+    await db.exec("ALTER TABLE posts ADD COLUMN source_url TEXT");
+  }
+
+  if (!columnNames.has("source_avatar_url")) {
+    await db.exec("ALTER TABLE posts ADD COLUMN source_avatar_url TEXT");
   }
 }
 

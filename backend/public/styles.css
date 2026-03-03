@@ -90,11 +90,29 @@ body {
 .repost-source {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   padding: 4px 8px;
   border-radius: 999px;
   background: #eef2ff;
   color: #4338ca;
   font-weight: 600;
+  text-decoration: none;
+}
+
+.repost-source:hover {
+  text-decoration: underline;
+}
+
+.repost-source-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.repost-source-text {
+  line-height: 1;
 }
 
 .card p {

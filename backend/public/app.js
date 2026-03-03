@@ -50,9 +50,27 @@ function renderPost(post) {
     label.className = "repost-label";
     label.textContent = "Источник";
 
-    const source = document.createElement("span");
+    const source = post.source_url ? document.createElement("a") : document.createElement("span");
     source.className = "repost-source";
-    source.textContent = post.source_name;
+    if (post.source_url) {
+      source.href = post.source_url;
+      source.target = "_blank";
+      source.rel = "noopener noreferrer";
+    }
+
+    if (post.source_avatar_url) {
+      const avatar = document.createElement("img");
+      avatar.className = "repost-source-avatar";
+      avatar.src = post.source_avatar_url;
+      avatar.alt = "";
+      avatar.loading = "lazy";
+      source.appendChild(avatar);
+    }
+
+    const sourceText = document.createElement("span");
+    sourceText.className = "repost-source-text";
+    sourceText.textContent = post.source_name;
+    source.appendChild(sourceText);
 
     repost.appendChild(label);
     repost.appendChild(source);

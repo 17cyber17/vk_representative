@@ -38,7 +38,7 @@ async function fetchWallPosts({ ownerId, count, offset }) {
     count,
     offset,
     extended: 1,
-    fields: "name"
+    fields: "name,photo_50,photo_100,photo_200"
   });
 }
 
