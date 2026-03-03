@@ -50,15 +50,31 @@ function extractAudio(attachments) {
     .filter((audio) => audio.url);
 }
 
-function getRepostSourceName(post, groupsById) {
+function getOwnerNameById(ownerId, groupsById, profilesById) {
+  if (!ownerId) return null;
+
+  if (ownerId < 0) {
+    const group = groupsById.get(Math.abs(ownerId));
+    return group ? group.name : null;
+  }
+
+  const profile = profilesById.get(ownerId);
+  if (!profile) return null;
+  return [profile.first_name, profile.last_name].filter(Boolean).join(" ") || null;
+}
+
+function getPostSourceName(post, groupsById, profilesById) {
   const copyHistory = post.copy_history || [];
-  if (copyHistory.length === 0) return null;
+  if (copyHistory.length > 0) {
+    const repostOwnerId = copyHistory[0].owner_id;
+    return getOwnerNameById(repostOwnerId, groupsById, profilesById);
+  }
 
-  const sourceOwnerId = copyHistory[0].owner_id;
-  if (!sourceOwnerId || sourceOwnerId >= 0) return null;
+  if (post.from_id && post.owner_id && post.from_id !== post.owner_id) {
+    return getOwnerNameById(post.from_id, groupsById, profilesById);
+  }
 
-  const group = groupsById.get(Math.abs(sourceOwnerId));
-  return group ? group.name : null;
+  return null;
 }
 
 function getPostText(post) {
@@ -106,6 +122,7 @@ async function syncPosts(db, logger = console, options = {}) {
     });
 
     const groupsById = new Map((response.groups || []).map((group) => [group.id, group]));
+    const profilesById = new Map((response.profiles || []).map((profile) => [profile.id, profile]));
     const items = response.items || [];
     if (items.length === 0) {
       break;
@@ -115,11 +132,11 @@ async function syncPosts(db, logger = console, options = {}) {
       const postId = post.id;
       const dateIso = toIso(post.date);
       const text = getPostText(post);
-      const repostSourceName = getRepostSourceName(post, groupsById);
+      const sourceName = getPostSourceName(post, groupsById, profilesById);
       const nowIso = new Date().toISOString();
 
       const existing = await db.get(
-        "SELECT post_id, text, date_iso, repost_source_name FROM posts WHERE post_id = ?",
+        "SELECT post_id, text, date_iso, source_name FROM posts WHERE post_id = ?",
         postId
       );
 
@@ -128,23 +145,23 @@ async function syncPosts(db, logger = console, options = {}) {
       } else if (
         existing.text !== text ||
         existing.date_iso !== dateIso ||
-        existing.repost_source_name !== repostSourceName
+        existing.source_name !== sourceName
       ) {
         updated += 1;
       }
 
       await db.run(
-        `INSERT INTO posts (post_id, date_iso, text, repost_source_name, created_at, updated_at)
+        `INSERT INTO posts (post_id, date_iso, text, source_name, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT(post_id) DO UPDATE SET
            date_iso = excluded.date_iso,
            text = excluded.text,
-           repost_source_name = excluded.repost_source_name,
+           source_name = excluded.source_name,
            updated_at = excluded.updated_at`,
         postId,
         dateIso,
         text,
-        repostSourceName,
+        sourceName,
         nowIso,
         nowIso
       );
